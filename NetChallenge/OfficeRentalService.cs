@@ -106,9 +106,6 @@ namespace NetChallenge
             if (request.Duration == null || request.Duration <= TimeSpan.Zero || request.DateTime == default(DateTime))
                 throw new InvalidDurationException();
 
-            if (request.DateTime <= DateTime.Now)
-                throw new BookingDateTimeConflictException();
-
             IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
 
             if (!CanBookOffice(request, bookingDtos))
@@ -187,7 +184,19 @@ namespace NetChallenge
 
         public IEnumerable<OfficeDto> GetOfficeSuggestions(SuggestionsRequest request)
         {
-            throw new NotImplementedException();
+            IEnumerable<Office> offices = _officeRepository.AsEnumerable()
+                .Where(x => x.MaxCapacity >= request.CapacityNeeded
+                        && request.ResourcesNeeded.All(resource => x.AvailableResources.Contains(resource)))
+                .OrderBy(x => x.Location.Neighborhood == request.PreferedNeigborHood ? 0 : 1)
+                .ThenBy(x => x.MaxCapacity)
+                .ThenBy(x => x.AvailableResources.Count());
+
+            List<OfficeDto> officeDtos = new List<OfficeDto>();
+
+            foreach (Office office in offices)
+                officeDtos.Add(OfficeMapper.MapToOfficeDto(office));
+
+            return officeDtos;
         }
     }
 }
