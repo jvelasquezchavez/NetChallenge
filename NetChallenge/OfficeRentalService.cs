@@ -63,7 +63,7 @@ namespace NetChallenge
         {
             try
             {
-                Location location = LocationMapper.MapToLocation(GetLocations().FirstOrDefault());
+                Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).FirstOrDefault());
 
                 if (location == null)
                 {
@@ -74,7 +74,7 @@ namespace NetChallenge
                 //if (GetOffices(location.Name).Any())
                 //    throw new OfficeHasSameNameAsLocationException();
 
-                if (GetOffice(request.Name) != null)
+                if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
 
                 // Crear una lista de recursos disponibles (puede ser vacía si no se proporciona)
@@ -94,7 +94,7 @@ namespace NetChallenge
             catch (OfficeNameDuplicateException ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
-                throw;
+                throw ex;
             }
             catch (OfficeHasSameNameAsLocationException ex)
             {
@@ -138,8 +138,8 @@ namespace NetChallenge
             return locationDtos;
         }
 
-        public Office GetOffice(string officeName) => 
-            _officeRepository.AsEnumerable().FirstOrDefault(x => x.Name == officeName);
+        public Office GetOffice(string locationName, string officeName) => 
+            _officeRepository.AsEnumerable().FirstOrDefault(x => x.Name == officeName && x.Location.Name == locationName);
 
         public IEnumerable<OfficeDto> GetOffices(string locationName)
         {
