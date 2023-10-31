@@ -12,7 +12,7 @@ namespace NetChallenge.Domain
 
         private Booking() { } // Constructor privado para Entity Framework u otras herramientas ORM
 
-        public Booking(string locationName, string officeName, DateTime dateTime, TimeSpan duration, string user)
+        public Booking(Location location, string officeName, DateTime dateTime, TimeSpan duration, string user)
         {
             if (officeName == null)
                 throw new ArgumentNullException("La oficina de la reserva no puede ser nula.");
@@ -24,7 +24,7 @@ namespace NetChallenge.Domain
                 throw new ArgumentNullException("El usuario de la reserva no puede ser nulo.");
 
             Id = Guid.NewGuid();
-            Office = new Office(new Location(locationName, ""), officeName, 1, null);
+            Office = new Office(new Location(location.Name, location.Neighborhood), officeName, 1, null);
             DateTime = dateTime;
             Duration = duration;
             User = user;
