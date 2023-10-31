@@ -105,7 +105,8 @@ namespace NetChallenge
 
         public void BookOffice(BookOfficeRequest request)
         {
-            throw new NotImplementedException();
+            Booking booking = new Booking(request.LocationName, request.OfficeName, request.DateTime, request.Duration, request.UserName);
+            _bookingRepository.Add(booking);
         }
 
         public IEnumerable<BookingDto> GetBookings(string locationName, string officeName)
