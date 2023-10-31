@@ -105,6 +105,15 @@ namespace NetChallenge
 
         public void BookOffice(BookOfficeRequest request)
         {
+            if (!GetLocations(request.LocationName).Any())
+                throw new LocationNotFoundException(request.LocationName);
+
+            if (GetOffice(request.LocationName, request.OfficeName) == null)
+                throw new OfficeNotFoundException(request.OfficeName);
+
+            if (string.IsNullOrEmpty(request.UserName))
+                throw new UserRequiredException();
+
             Booking booking = new Booking(request.LocationName, request.OfficeName, request.DateTime, request.Duration, request.UserName);
             _bookingRepository.Add(booking);
         }
