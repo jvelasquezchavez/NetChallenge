@@ -70,14 +70,9 @@ namespace NetChallenge
                     throw new InvalidOperationException("La ubicación especificada no existe.");
                 }
 
-                // Validar que no exista una oficina con el mismo nombre en la ubicación
-                //if (GetOffices(location.Name).Any())
-                //    throw new OfficeHasSameNameAsLocationException();
-
                 if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
 
-                // Crear una lista de recursos disponibles (puede ser vacía si no se proporciona)
                 IEnumerable<string> availableResources = request.AvailableResources ?? new List<string>();
 
                 // Crear la nueva oficina
@@ -149,7 +144,6 @@ namespace NetChallenge
             DateTime existingBookingStart = existingBooking.DateTime;
             DateTime existingBookingEnd = existingBookingStart.Add(existingBooking.Duration);
 
-            // Verificar si hay solapamiento de horarios
             return newBookingStart < existingBookingEnd && newBookingEnd > existingBookingStart;
         }
 

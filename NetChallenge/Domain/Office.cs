@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System;
+using static NetChallenge.Exceptions.OfficeRentalException;
 
 namespace NetChallenge.Domain
 {
@@ -16,7 +17,7 @@ namespace NetChallenge.Domain
         public Office(Location location, string name, int maxCapacity, IEnumerable<string> availableResources)
         {
             if (location == null)
-                throw new ArgumentNullException("La ubicación de la oficina no puede ser nula.");
+                throw new LocationNotFoundException(location.Name);
             if (string.IsNullOrEmpty(name))
                 throw new ArgumentException("El nombre de la oficina no puede estar vacío.");
             if (maxCapacity <= 0)
