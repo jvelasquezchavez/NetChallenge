@@ -21,7 +21,7 @@ namespace NetChallenge.Exceptions
         public class LocationNotFoundException : OfficeRentalException
         {
             public LocationNotFoundException(string locationName)
-                : base($"La ubicación '{locationName}' no se encontró.")
+                : base($"Location not found: '{locationName}'")
             {
             }
         }
@@ -29,7 +29,7 @@ namespace NetChallenge.Exceptions
         public class OfficeNotFoundException : OfficeRentalException
         {
             public OfficeNotFoundException(string officeName)
-                : base($"La oficina '{officeName}' no se encontró.")
+                : base($"Office not found: '{officeName}'")
             {
             }
         }
@@ -37,28 +37,28 @@ namespace NetChallenge.Exceptions
         // Excepciones relacionadas con Location
         public class LocationNameNullOrEmptyException : OfficeRentalException
         {
-            public LocationNameNullOrEmptyException() : base("El nombre de la ubicación no puede estar vacío.")
+            public LocationNameNullOrEmptyException() : base("Location name cannot be empty.")
             {
             }
         }
 
         public class LocationNeighborhoodNullOrEmptyException : OfficeRentalException
         {
-            public LocationNeighborhoodNullOrEmptyException() : base("El barrio de la ubicación no puede estar vacío.")
+            public LocationNeighborhoodNullOrEmptyException() : base("Neighborhood cannot be empty.")
             {
             }
         }
 
         public class LocationNameDuplicateException : OfficeRentalException
         {
-            public LocationNameDuplicateException() : base("El nombre de la ubicación ya existe.")
+            public LocationNameDuplicateException(string locationName) : base($"Location '{locationName}' already exists.")
             {
             }
         }
 
         public class OfficeHasSameNameAsLocationException : OfficeRentalException
         {
-            public OfficeHasSameNameAsLocationException() : base("The location ya existe.")
+            public OfficeHasSameNameAsLocationException() : base("The location and the office has the same name.")
             {
             }
         }
@@ -66,28 +66,28 @@ namespace NetChallenge.Exceptions
         // Excepciones relacionadas con Office
         public class InvalidLocationException : OfficeRentalException
         {
-            public InvalidLocationException() : base("La ubicación de la oficina no es válida.")
+            public InvalidLocationException() : base("Office location is invalid.")
             {
             }
         }
 
         public class OfficeNameNullOrEmptyException : OfficeRentalException
         {
-            public OfficeNameNullOrEmptyException() : base("El nombre de la oficina no puede estar vacío.")
+            public OfficeNameNullOrEmptyException() : base("Office name cannot be empty.")
             {
             }
         }
 
         public class OfficeNameDuplicateException : OfficeRentalException
         {
-            public OfficeNameDuplicateException() : base("El nombre de la oficina ya existe en esta ubicación.")
+            public OfficeNameDuplicateException() : base("Office name already exists in this location.")
             {
             }
         }
 
         public class InvalidCapacityException : OfficeRentalException
         {
-            public InvalidCapacityException() : base("La capacidad máxima de la oficina debe ser mayor a cero.")
+            public InvalidCapacityException() : base("Office maximum capacity must be greater than zero.")
             {
             }
         }
@@ -95,35 +95,42 @@ namespace NetChallenge.Exceptions
         // Excepciones relacionadas con Booking
         public class InvalidOfficeException : OfficeRentalException
         {
-            public InvalidOfficeException() : base("La oficina de la reserva no es válida.")
+            public InvalidOfficeException() : base("Booking office is invalid.")
             {
             }
         }
 
         public class InvalidDurationException : OfficeRentalException
         {
-            public InvalidDurationException() : base("La duración de la reserva debe ser mayor a cero.")
+            public InvalidDurationException() : base("Booking duration must be greater than zero.")
             {
             }
         }
 
         public class BookingConflictException : OfficeRentalException
         {
-            public BookingConflictException() : base("La reserva se superpone con otras reservas de la misma oficina.")
+            public BookingConflictException() : base("Booking conflict detected.")
+            {                
+            }
+        }
+
+        public class BookingDateTimeConflictException : OfficeRentalException
+        {
+            public BookingDateTimeConflictException() : base("Date Booking conflict detected.")
             {
             }
         }
 
         public class UserRequiredException : OfficeRentalException
         {
-            public UserRequiredException() : base("El usuario que realiza la reserva es obligatorio.")
+            public UserRequiredException() : base("User name is required.")
             {
             }
         }
 
         public class InvalidDurationInHoursException : OfficeRentalException
         {
-            public InvalidDurationInHoursException() : base("La reserva debe tener una duración de N horas.")
+            public InvalidDurationInHoursException() : base("Duration must be in whole hours.")
             {
             }
         }

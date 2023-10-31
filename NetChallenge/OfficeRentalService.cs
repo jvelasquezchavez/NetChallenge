@@ -33,17 +33,13 @@ namespace NetChallenge
                 if (string.IsNullOrEmpty(request.Neighborhood))
                     throw new LocationNeighborhoodNullOrEmptyException();
 
-                Location newLocation = new Location(request.Name, request.Neighborhood);
+                if (GetLocations(request.Name).Any())
+                    throw new LocationNameDuplicateException(request.Name);
 
-                if (GetLocations(newLocation.Name).Any())
-                    throw new LocationNameDuplicateException();
-
-                _locationRepository.Add(newLocation);
+                _locationRepository.Add(new Location(request.Name, request.Neighborhood));
             }
             catch (LocationNameDuplicateException ex)
             {
-                // Aquí puedes manejar la excepción, registrarla o realizar acciones específicas si es necesario.
-                // Por ejemplo, puedes registrar el error y devolver un mensaje de error al usuario.
                 Console.WriteLine("Error: " + ex.Message);
                 throw;
             }
@@ -66,9 +62,7 @@ namespace NetChallenge
                 Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).FirstOrDefault());
 
                 if (location == null)
-                {
-                    throw new InvalidOperationException("La ubicación especificada no existe.");
-                }
+                    throw new LocationNotFoundException(request.LocationName);
 
                 if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
@@ -109,8 +103,11 @@ namespace NetChallenge
             if (string.IsNullOrEmpty(request.UserName))
                 throw new UserRequiredException();
 
-            if (request.Duration == null || request.Duration <= TimeSpan.Zero)
+            if (request.Duration == null || request.Duration <= TimeSpan.Zero || request.DateTime == default(DateTime))
                 throw new InvalidDurationException();
+
+            if (request.DateTime <= DateTime.Now)
+                throw new BookingDateTimeConflictException();
 
             IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
 
@@ -126,14 +123,11 @@ namespace NetChallenge
 
         public bool CanBookOffice(BookOfficeRequest request, IEnumerable<BookingDto> bookingDtos)
         {
-            // Verificar si hay conflictos de horario
-            bool isAvailable = !bookingDtos.Any(booking =>
+            return !bookingDtos.Any(booking =>
                 booking.LocationName == request.LocationName &&
                 booking.OfficeName == request.OfficeName &&
                 IsTimeSlotOverlap(booking, request)
             );
-
-            return isAvailable;
         }
 
         private bool IsTimeSlotOverlap(BookingDto existingBooking, BookOfficeRequest newBooking)
@@ -194,11 +188,6 @@ namespace NetChallenge
         public IEnumerable<OfficeDto> GetOfficeSuggestions(SuggestionsRequest request)
         {
             throw new NotImplementedException();
-        }
-
-        public bool LocationAndOfficeWithSameName(string locationName)
-        {
-            return GetOffices(locationName).Any();
         }
     }
 }
