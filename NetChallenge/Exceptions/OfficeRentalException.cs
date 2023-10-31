@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace NetChallenge.Exceptions
 {
-    public class OfficeRentalException: Exception
+    public class OfficeRentalException : Exception
     {
         public OfficeRentalException()
         {
@@ -57,7 +55,7 @@ namespace NetChallenge.Exceptions
             {
             }
         }
-        
+
         public class OfficeHasSameNameAsLocationException : OfficeRentalException
         {
             public OfficeHasSameNameAsLocationException() : base("The location ya existe.")
@@ -122,5 +120,13 @@ namespace NetChallenge.Exceptions
             {
             }
         }
+
+        public class InvalidDurationInHoursException : OfficeRentalException
+        {
+            public InvalidDurationInHoursException() : base("La reserva debe tener una duración de N horas.")
+            {
+            }
+        }
+
     }
 }

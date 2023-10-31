@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NetChallenge.Abstractions;
+﻿using NetChallenge.Abstractions;
 using NetChallenge.Domain;
 using NetChallenge.Dto.Input;
 using NetChallenge.Dto.Output;
 using NetChallenge.Mappers;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static NetChallenge.Exceptions.OfficeRentalException;
 
 namespace NetChallenge
 {
-    public class OfficeRentalService: IOfficeRentalService
+    public class OfficeRentalService : IOfficeRentalService
     {
         private readonly ILocationRepository _locationRepository;
         private readonly IOfficeRepository _officeRepository;
@@ -114,8 +114,43 @@ namespace NetChallenge
             if (string.IsNullOrEmpty(request.UserName))
                 throw new UserRequiredException();
 
+            if (request.Duration == null || request.Duration <= TimeSpan.Zero)
+                throw new InvalidDurationException();
+
+            IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
+
+            if (!CanBookOffice(request, bookingDtos))
+                throw new BookingConflictException();
+
+            if (request.Duration.TotalMinutes % 60 != 0)
+                throw new InvalidDurationInHoursException();
+
             Booking booking = new Booking(request.LocationName, request.OfficeName, request.DateTime, request.Duration, request.UserName);
             _bookingRepository.Add(booking);
+        }
+
+        public bool CanBookOffice(BookOfficeRequest request, IEnumerable<BookingDto> bookingDtos)
+        {
+            // Verificar si hay conflictos de horario
+            bool isAvailable = !bookingDtos.Any(booking =>
+                booking.LocationName == request.LocationName &&
+                booking.OfficeName == request.OfficeName &&
+                IsTimeSlotOverlap(booking, request)
+            );
+
+            return isAvailable;
+        }
+
+        private bool IsTimeSlotOverlap(BookingDto existingBooking, BookOfficeRequest newBooking)
+        {
+            DateTime newBookingStart = newBooking.DateTime;
+            DateTime newBookingEnd = newBookingStart.Add(newBooking.Duration);
+
+            DateTime existingBookingStart = existingBooking.DateTime;
+            DateTime existingBookingEnd = existingBookingStart.Add(existingBooking.Duration);
+
+            // Verificar si hay solapamiento de horarios
+            return newBookingStart < existingBookingEnd && newBookingEnd > existingBookingStart;
         }
 
         public IEnumerable<BookingDto> GetBookings(string locationName, string officeName)
@@ -131,8 +166,8 @@ namespace NetChallenge
         public IEnumerable<LocationDto> GetLocations()
         {
             List<LocationDto> locationDtos = new List<LocationDto>();
-            
-            foreach(var location in _locationRepository.AsEnumerable())
+
+            foreach (var location in _locationRepository.AsEnumerable())
                 locationDtos.Add(LocationMapper.MapToLocationDto(location));
 
             return locationDtos;
@@ -148,7 +183,7 @@ namespace NetChallenge
             return locationDtos;
         }
 
-        public Office GetOffice(string locationName, string officeName) => 
+        public Office GetOffice(string locationName, string officeName) =>
             _officeRepository.AsEnumerable().FirstOrDefault(x => x.Name == officeName && x.Location.Name == locationName);
 
         public IEnumerable<OfficeDto> GetOffices(string locationName)
