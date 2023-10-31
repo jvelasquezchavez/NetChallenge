@@ -94,7 +94,9 @@ namespace NetChallenge
 
         public void BookOffice(BookOfficeRequest request)
         {
-            if (!GetLocations(request.LocationName).Any())
+            Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).SingleOrDefault());
+
+            if (location is null)
                 throw new LocationNotFoundException(request.LocationName);
 
             if (GetOffice(request.LocationName, request.OfficeName) == null)
@@ -114,7 +116,7 @@ namespace NetChallenge
             if (request.Duration.TotalMinutes % 60 != 0)
                 throw new InvalidDurationInHoursException();
 
-            Booking booking = new Booking(request.LocationName, request.OfficeName, request.DateTime, request.Duration, request.UserName);
+            Booking booking = new Booking(location, request.OfficeName, request.DateTime, request.Duration, request.UserName);
             _bookingRepository.Add(booking);
         }
 
@@ -143,7 +145,7 @@ namespace NetChallenge
             List<BookingDto> bookingDtos = new List<BookingDto>();
 
             foreach (var booking in _bookingRepository.AsEnumerable())
-                bookingDtos.Add(BookingMapper.MapToLocationDto(booking));
+                bookingDtos.Add(BookingMapper.MapToBookingDto(booking));
 
             return bookingDtos;
         }
