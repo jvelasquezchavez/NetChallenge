@@ -11,6 +11,11 @@ namespace NetChallenge.Mappers
         public static BookingDto MapToLocationDto(Booking booking)
         {
             BookingDto bookingDto = new BookingDto();
+            bookingDto.LocationName = booking.Office.Location.Name;
+            bookingDto.OfficeName = booking.Office.Name;
+            bookingDto.Duration = booking.Duration;
+            bookingDto.DateTime = booking.DateTime;
+            bookingDto.UserName = booking.User;
 
             return bookingDto;
         }
