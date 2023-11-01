@@ -1,4 +1,5 @@
-﻿using NetChallenge.Abstractions;
+﻿using AutoMapper;
+using NetChallenge.Abstractions;
 using NetChallenge.Infrastructure;
 
 namespace NetChallenge.Test
@@ -9,13 +10,14 @@ namespace NetChallenge.Test
         protected ILocationRepository LocationRepository;
         protected IOfficeRepository OfficeRepository;
         protected IBookingRepository BookingRepository;
+        protected IMapper Mapper;
 
         public OfficeRentalServiceTest()
         {
             LocationRepository = new LocationRepository();
             OfficeRepository = new OfficeRepository();
             BookingRepository = new BookingRepository();
-            Service = new OfficeRentalService(LocationRepository, OfficeRepository, BookingRepository);
+            Service = new OfficeRentalService(LocationRepository, OfficeRepository, BookingRepository, Mapper);
         }
     }
 }
