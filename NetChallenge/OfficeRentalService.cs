@@ -122,9 +122,6 @@ namespace NetChallenge
             if (string.IsNullOrEmpty(request.LocationName))
                 throw new LocationNameNullOrEmptyException();
 
-            if (GetOffice(request.LocationName, request.OfficeName) == null)
-                throw new OfficeNotFoundException(request.OfficeName);
-
             if (string.IsNullOrEmpty(request.UserName))
                 throw new UserRequiredException();
 
@@ -134,17 +131,26 @@ namespace NetChallenge
             if (request.Duration.TotalMinutes % 60 != 0)
                 throw new InvalidDurationInHoursException();
 
+            if (GetOffice(request.LocationName, request.OfficeName) == null)
+                throw new OfficeNotFoundException(request.OfficeName);
+
             Location location = _mapper.Map<Location>(GetLocations(request.LocationName).SingleOrDefault());
 
             if (location is null)
                 throw new LocationNotFoundException(request.LocationName);
+            
+            Office office = _mapper.Map<Office>(GetOffice(request.LocationName, request.OfficeName));
+
+            if (office is null)
+                throw new OfficeNotFoundException(request.LocationName);
 
             IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
 
             if (!CanBookOffice(request, bookingDtos))
                 throw new BookingConflictException();
 
-            Booking booking = _mapper.Map<Booking>(request);//location, request.OfficeName, request.DateTime, request.Duration, request.UserName
+            Booking booking = _mapper.Map<Booking>(request);
+            booking.Office = office;
             _bookingRepository.Add(booking);
         }
 
@@ -173,7 +179,7 @@ namespace NetChallenge
             List<BookingDto> bookingDtos = new List<BookingDto>();
 
             foreach (var booking in _bookingRepository.AsEnumerable())
-                bookingDtos.Add(BookingMapper.MapToBookingDto(booking));
+                bookingDtos.Add(_mapper.Map<BookingDto>(booking));
 
             return bookingDtos;
         }
@@ -183,7 +189,7 @@ namespace NetChallenge
             List<LocationDto> locationDtos = new List<LocationDto>();
 
             foreach (var location in _locationRepository.AsEnumerable())
-                locationDtos.Add(LocationMapper.MapToLocationDto(location));
+                locationDtos.Add(_mapper.Map<LocationDto>(location));
 
             return locationDtos;
         }
@@ -193,7 +199,7 @@ namespace NetChallenge
             List<LocationDto> locationDtos = new List<LocationDto>();
             IEnumerable<Location> locations = _locationRepository.AsEnumerable().Where(x => x.Name == locationName).ToList();
             foreach (var location in locations)
-                locationDtos.Add(LocationMapper.MapToLocationDto(location));
+                locationDtos.Add(_mapper.Map<LocationDto>(location));
 
             return locationDtos;
         }
@@ -207,7 +213,7 @@ namespace NetChallenge
             IEnumerable<Office> offices = _officeRepository.AsEnumerable().Where(x => x.Location.Name == locationName).ToList();
 
             foreach (var office in offices)
-                officeDtos.Add(OfficeMapper.MapToOfficeDto(office));
+                officeDtos.Add(_mapper.Map<OfficeDto>(office));
 
             return officeDtos;
         }
@@ -224,7 +230,7 @@ namespace NetChallenge
             List<OfficeDto> officeDtos = new List<OfficeDto>();
 
             foreach (Office office in offices)
-                officeDtos.Add(OfficeMapper.MapToOfficeDto(office));
+                officeDtos.Add(_mapper.Map<OfficeDto>(office));
 
             return officeDtos;
         }
