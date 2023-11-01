@@ -1,8 +1,8 @@
-﻿using NetChallenge.Abstractions;
+﻿using AutoMapper;
+using NetChallenge.Abstractions;
 using NetChallenge.Domain;
 using NetChallenge.Dto.Input;
 using NetChallenge.Dto.Output;
-using NetChallenge.Mappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,12 +15,14 @@ namespace NetChallenge
         private readonly ILocationRepository _locationRepository;
         private readonly IOfficeRepository _officeRepository;
         private readonly IBookingRepository _bookingRepository;
+        private readonly IMapper _mapper;
 
-        public OfficeRentalService(ILocationRepository locationRepository, IOfficeRepository officeRepository, IBookingRepository bookingRepository)
+        public OfficeRentalService(ILocationRepository locationRepository, IOfficeRepository officeRepository, IBookingRepository bookingRepository, IMapper mapper)
         {
             _locationRepository = locationRepository;
             _officeRepository = officeRepository;
             _bookingRepository = bookingRepository;
+            _mapper = mapper;
         }
 
         public void AddLocation(AddLocationRequest request)
@@ -36,7 +38,9 @@ namespace NetChallenge
                 if (GetLocations(request.Name).Any())
                     throw new LocationNameDuplicateException(request.Name);
 
-                _locationRepository.Add(new Location(request.Name, request.Neighborhood));
+                Location location = new Location();
+                location = _mapper.Map<Location>(request);
+                _locationRepository.Add(location);
             }
             catch (LocationNameDuplicateException ex)
             {
@@ -59,20 +63,27 @@ namespace NetChallenge
         {
             try
             {
-                Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).FirstOrDefault());
+                if (string.IsNullOrEmpty(request.Name))
+                    throw new OfficeNameNullOrEmptyException();
 
-                if (location == null)
-                    throw new LocationNotFoundException(request.LocationName);
+                if (string.IsNullOrEmpty(request.LocationName))
+                    throw new LocationNameNullOrEmptyException();
+
+                if (request.MaxCapacity <= 0)
+                    throw new InvalidCapacityException();
 
                 if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
 
-                IEnumerable<string> availableResources = request.AvailableResources ?? new List<string>();
+                Location location = _mapper.Map<Location>(GetLocations(request.LocationName).FirstOrDefault());
 
-                // Crear la nueva oficina
-                Office newOffice = new Office(location, request.Name, request.MaxCapacity, availableResources);
+                if (location == null)
+                    throw new LocationNotFoundException(request.LocationName);
 
-                // Agregar la oficina al repositorio
+                Office newOffice = new Office();
+                newOffice = _mapper.Map<Office>(request);
+                newOffice.Location = location;
+
                 _officeRepository.Add(newOffice);
             }
             catch (OfficeNameNullOrEmptyException ex)
@@ -85,7 +96,17 @@ namespace NetChallenge
                 Console.WriteLine("Error: " + ex.Message);
                 throw ex;
             }
-            catch (OfficeHasSameNameAsLocationException ex)
+            catch (LocationNameNullOrEmptyException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                throw;
+            }
+            catch (InvalidCapacityException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                throw;
+            }
+            catch (LocationNotFoundException ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
                 throw;
@@ -94,13 +115,11 @@ namespace NetChallenge
 
         public void BookOffice(BookOfficeRequest request)
         {
-            Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).SingleOrDefault());
+            if (string.IsNullOrEmpty(request.OfficeName))
+                throw new OfficeNameNullOrEmptyException();
 
-            if (location is null)
-                throw new LocationNotFoundException(request.LocationName);
-
-            if (GetOffice(request.LocationName, request.OfficeName) == null)
-                throw new OfficeNotFoundException(request.OfficeName);
+            if (string.IsNullOrEmpty(request.LocationName))
+                throw new LocationNameNullOrEmptyException();
 
             if (string.IsNullOrEmpty(request.UserName))
                 throw new UserRequiredException();
@@ -108,15 +127,29 @@ namespace NetChallenge
             if (request.Duration == null || request.Duration <= TimeSpan.Zero || request.DateTime == default(DateTime))
                 throw new InvalidDurationException();
 
+            if (request.Duration.TotalMinutes % 60 != 0)
+                throw new InvalidDurationInHoursException();
+
+            if (GetOffice(request.LocationName, request.OfficeName) == null)
+                throw new OfficeNotFoundException(request.OfficeName);
+
+            Location location = _mapper.Map<Location>(GetLocations(request.LocationName).SingleOrDefault());
+
+            if (location is null)
+                throw new LocationNotFoundException(request.LocationName);
+            
+            Office office = _mapper.Map<Office>(GetOffice(request.LocationName, request.OfficeName));
+
+            if (office is null)
+                throw new OfficeNotFoundException(request.LocationName);
+
             IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
 
             if (!CanBookOffice(request, bookingDtos))
                 throw new BookingConflictException();
 
-            if (request.Duration.TotalMinutes % 60 != 0)
-                throw new InvalidDurationInHoursException();
-
-            Booking booking = new Booking(location, request.OfficeName, request.DateTime, request.Duration, request.UserName);
+            Booking booking = _mapper.Map<Booking>(request);
+            booking.Office = office;
             _bookingRepository.Add(booking);
         }
 
@@ -145,7 +178,7 @@ namespace NetChallenge
             List<BookingDto> bookingDtos = new List<BookingDto>();
 
             foreach (var booking in _bookingRepository.AsEnumerable())
-                bookingDtos.Add(BookingMapper.MapToBookingDto(booking));
+                bookingDtos.Add(_mapper.Map<BookingDto>(booking));
 
             return bookingDtos;
         }
@@ -155,7 +188,7 @@ namespace NetChallenge
             List<LocationDto> locationDtos = new List<LocationDto>();
 
             foreach (var location in _locationRepository.AsEnumerable())
-                locationDtos.Add(LocationMapper.MapToLocationDto(location));
+                locationDtos.Add(_mapper.Map<LocationDto>(location));
 
             return locationDtos;
         }
@@ -165,7 +198,7 @@ namespace NetChallenge
             List<LocationDto> locationDtos = new List<LocationDto>();
             IEnumerable<Location> locations = _locationRepository.AsEnumerable().Where(x => x.Name == locationName).ToList();
             foreach (var location in locations)
-                locationDtos.Add(LocationMapper.MapToLocationDto(location));
+                locationDtos.Add(_mapper.Map<LocationDto>(location));
 
             return locationDtos;
         }
@@ -179,7 +212,7 @@ namespace NetChallenge
             IEnumerable<Office> offices = _officeRepository.AsEnumerable().Where(x => x.Location.Name == locationName).ToList();
 
             foreach (var office in offices)
-                officeDtos.Add(OfficeMapper.MapToOfficeDto(office));
+                officeDtos.Add(_mapper.Map<OfficeDto>(office));
 
             return officeDtos;
         }
@@ -196,7 +229,7 @@ namespace NetChallenge
             List<OfficeDto> officeDtos = new List<OfficeDto>();
 
             foreach (Office office in offices)
-                officeDtos.Add(OfficeMapper.MapToOfficeDto(office));
+                officeDtos.Add(_mapper.Map<OfficeDto>(office));
 
             return officeDtos;
         }

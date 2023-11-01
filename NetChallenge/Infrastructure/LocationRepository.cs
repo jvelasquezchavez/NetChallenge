@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NetChallenge.Abstractions;
+﻿using NetChallenge.Abstractions;
 using NetChallenge.Domain;
+using System;
+using System.Collections.Generic;
 
 namespace NetChallenge.Infrastructure
 {
@@ -15,7 +14,7 @@ namespace NetChallenge.Infrastructure
             _locations = new List<Location>();
         }
 
-        public IEnumerable<Location> AsEnumerable() => _locations; 
+        public IEnumerable<Location> AsEnumerable() => _locations;
 
         public void Add(Location item)
         {
@@ -24,7 +23,5 @@ namespace NetChallenge.Infrastructure
 
             _locations.Add(item);
         }
-
-        public Location GetLocationByName(string name) => _locations.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
     }
 }

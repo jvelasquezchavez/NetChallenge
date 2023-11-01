@@ -1,8 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using NetChallenge.Abstractions;
+﻿using NetChallenge.Abstractions;
 using NetChallenge.Domain;
+using System;
+using System.Collections.Generic;
 
 namespace NetChallenge.Infrastructure
 {
@@ -24,12 +23,5 @@ namespace NetChallenge.Infrastructure
 
             _offices.Add(item);
         }
-
-        public Office GetOfficeByNameAndLocation(string name, Location location) => 
-            _offices.FirstOrDefault(office =>
-                office.Name.Equals(name, StringComparison.OrdinalIgnoreCase) && office.Location == location);
-
-        public IEnumerable<Office> GetOfficeByLocation(string locationName) =>
-            _offices.Where(office => office.Location.Name == locationName);
     }
 }
