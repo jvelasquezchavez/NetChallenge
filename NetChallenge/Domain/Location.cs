@@ -1,15 +1,17 @@
-﻿namespace NetChallenge.Domain
+﻿using System.Collections.Generic;
+
+namespace NetChallenge.Domain
 {
     public class Location
     {
+        public int Id { get; set; }
         public string Name { get; set; }
         public string Neighborhood { get; set; }
-        public Location() { }
+        public ICollection<Office> offices { get; set; }
 
-        public Location(string name, string neighborhood)
+        public Location() 
         {
-            Name = name;
-            Neighborhood = neighborhood;
+            offices = new HashSet<Office>();
         }
     }
 }
