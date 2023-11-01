@@ -3,7 +3,6 @@ using NetChallenge.Abstractions;
 using NetChallenge.Domain;
 using NetChallenge.Dto.Input;
 using NetChallenge.Dto.Output;
-using NetChallenge.Mappers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
