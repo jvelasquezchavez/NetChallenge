@@ -102,7 +102,17 @@ namespace NetChallenge
                 Console.WriteLine("Error: " + ex.Message);
                 throw ex;
             }
-            catch (OfficeHasSameNameAsLocationException ex)
+            catch (LocationNameNullOrEmptyException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                throw;
+            }
+            catch (InvalidCapacityException ex)
+            {
+                Console.WriteLine("Error: " + ex.Message);
+                throw;
+            }
+            catch (LocationNotFoundException ex)
             {
                 Console.WriteLine("Error: " + ex.Message);
                 throw;
