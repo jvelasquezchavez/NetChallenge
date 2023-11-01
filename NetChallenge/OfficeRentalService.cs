@@ -137,7 +137,7 @@ namespace NetChallenge
 
             if (location is null)
                 throw new LocationNotFoundException(request.LocationName);
-            
+
             Office office = _mapper.Map<Office>(GetOffice(request.LocationName, request.OfficeName));
 
             if (office is null)
@@ -183,24 +183,13 @@ namespace NetChallenge
             return bookingDtos;
         }
 
-        public IEnumerable<LocationDto> GetLocations()
-        {
-            List<LocationDto> locationDtos = new List<LocationDto>();
-
-            foreach (var location in _locationRepository.AsEnumerable())
-                locationDtos.Add(_mapper.Map<LocationDto>(location));
-
-            return locationDtos;
-        }
+        public IEnumerable<LocationDto> GetLocations() => MapList<Location, LocationDto>(_locationRepository.AsEnumerable());
 
         public IEnumerable<LocationDto> GetLocations(string locationName)
         {
-            List<LocationDto> locationDtos = new List<LocationDto>();
             IEnumerable<Location> locations = _locationRepository.AsEnumerable().Where(x => x.Name == locationName).ToList();
-            foreach (var location in locations)
-                locationDtos.Add(_mapper.Map<LocationDto>(location));
 
-            return locationDtos;
+            return MapList<Location, LocationDto>(locations);
         }
 
         public Office GetOffice(string locationName, string officeName) =>
@@ -208,13 +197,9 @@ namespace NetChallenge
 
         public IEnumerable<OfficeDto> GetOffices(string locationName)
         {
-            List<OfficeDto> officeDtos = new List<OfficeDto>();
             IEnumerable<Office> offices = _officeRepository.AsEnumerable().Where(x => x.Location.Name == locationName).ToList();
 
-            foreach (var office in offices)
-                officeDtos.Add(_mapper.Map<OfficeDto>(office));
-
-            return officeDtos;
+            return MapList<Office, OfficeDto>(offices);
         }
 
         public IEnumerable<OfficeDto> GetOfficeSuggestions(SuggestionsRequest request)
@@ -226,12 +211,17 @@ namespace NetChallenge
                 .ThenBy(x => x.MaxCapacity)
                 .ThenBy(x => x.AvailableResources.Count());
 
-            List<OfficeDto> officeDtos = new List<OfficeDto>();
+            return MapList<Office, OfficeDto>(offices);
+        }
 
-            foreach (Office office in offices)
-                officeDtos.Add(_mapper.Map<OfficeDto>(office));
+        public List<TDestination> MapList<TSource, TDestination>(IEnumerable<TSource> sourceList)
+        {
+            var destinationList = new List<TDestination>();
 
-            return officeDtos;
+            foreach (var source in sourceList)
+                destinationList.Add(_mapper.Map<TDestination>(source));
+
+            return destinationList;
         }
     }
 }
