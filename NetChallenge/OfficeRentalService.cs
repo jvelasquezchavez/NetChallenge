@@ -1,4 +1,5 @@
-﻿using NetChallenge.Abstractions;
+﻿using AutoMapper;
+using NetChallenge.Abstractions;
 using NetChallenge.Domain;
 using NetChallenge.Dto.Input;
 using NetChallenge.Dto.Output;
@@ -15,12 +16,15 @@ namespace NetChallenge
         private readonly ILocationRepository _locationRepository;
         private readonly IOfficeRepository _officeRepository;
         private readonly IBookingRepository _bookingRepository;
+        private readonly IMapper _mapper;
 
-        public OfficeRentalService(ILocationRepository locationRepository, IOfficeRepository officeRepository, IBookingRepository bookingRepository)
+        public OfficeRentalService(ILocationRepository locationRepository, IOfficeRepository officeRepository, IBookingRepository bookingRepository, IMapper mapper)
         {
             _locationRepository = locationRepository;
             _officeRepository = officeRepository;
             _bookingRepository = bookingRepository;
+            _mapper = mapper;
+            //106 a 115 para traer automapper --> Llamar profiles a la carpeta de automappers.
         }
 
         public void AddLocation(AddLocationRequest request)
@@ -36,7 +40,9 @@ namespace NetChallenge
                 if (GetLocations(request.Name).Any())
                     throw new LocationNameDuplicateException(request.Name);
 
-                _locationRepository.Add(new Location(request.Name, request.Neighborhood));
+                Location location = new Location();
+                location = _mapper.Map<Location>(request);
+                _locationRepository.Add(location);
             }
             catch (LocationNameDuplicateException ex)
             {
@@ -59,18 +65,29 @@ namespace NetChallenge
         {
             try
             {
-                Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).FirstOrDefault());
+                if (string.IsNullOrEmpty(request.Name))
+                    throw new OfficeNameNullOrEmptyException();
+
+                if (string.IsNullOrEmpty(request.LocationName))
+                    throw new LocationNameNullOrEmptyException();
+
+                Location location = _mapper.Map<Location>(GetLocations(request.LocationName).FirstOrDefault());
 
                 if (location == null)
                     throw new LocationNotFoundException(request.LocationName);
 
+                if (request.MaxCapacity <= 0)
+                    throw new InvalidCapacityException();
+
                 if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
 
-                IEnumerable<string> availableResources = request.AvailableResources ?? new List<string>();
-
                 // Crear la nueva oficina
-                Office newOffice = new Office(location, request.Name, request.MaxCapacity, availableResources);
+                Office newOffice = new Office();
+                newOffice.Location = location;
+                newOffice.Name = request.Name;
+                newOffice.MaxCapacity = request.MaxCapacity;
+                newOffice.AvailableResources = request.AvailableResources ?? new List<string>();
 
                 // Agregar la oficina al repositorio
                 _officeRepository.Add(newOffice);
@@ -94,10 +111,11 @@ namespace NetChallenge
 
         public void BookOffice(BookOfficeRequest request)
         {
-            Location location = LocationMapper.MapToLocation(GetLocations(request.LocationName).SingleOrDefault());
+            if (string.IsNullOrEmpty(request.OfficeName))
+                throw new OfficeNameNullOrEmptyException();
 
-            if (location is null)
-                throw new LocationNotFoundException(request.LocationName);
+            if (string.IsNullOrEmpty(request.LocationName))
+                throw new LocationNameNullOrEmptyException();
 
             if (GetOffice(request.LocationName, request.OfficeName) == null)
                 throw new OfficeNotFoundException(request.OfficeName);
@@ -108,15 +126,20 @@ namespace NetChallenge
             if (request.Duration == null || request.Duration <= TimeSpan.Zero || request.DateTime == default(DateTime))
                 throw new InvalidDurationException();
 
+            if (request.Duration.TotalMinutes % 60 != 0)
+                throw new InvalidDurationInHoursException();
+
+            Location location = _mapper.Map<Location>(GetLocations(request.LocationName).SingleOrDefault());
+
+            if (location is null)
+                throw new LocationNotFoundException(request.LocationName);
+
             IEnumerable<BookingDto> bookingDtos = GetBookings(request.LocationName, request.OfficeName);
 
             if (!CanBookOffice(request, bookingDtos))
                 throw new BookingConflictException();
 
-            if (request.Duration.TotalMinutes % 60 != 0)
-                throw new InvalidDurationInHoursException();
-
-            Booking booking = new Booking(location, request.OfficeName, request.DateTime, request.Duration, request.UserName);
+            Booking booking = _mapper.Map<Booking>(request);//location, request.OfficeName, request.DateTime, request.Duration, request.UserName
             _bookingRepository.Add(booking);
         }
 
