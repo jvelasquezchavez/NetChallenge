@@ -5,9 +5,6 @@ namespace NetChallenge.Mappers
 {
     public class BookingMapper
     {
-        public static Booking MapToBooking(BookingDto bookingDto, Location location)
-            => new Booking(location, bookingDto.OfficeName, bookingDto.DateTime, bookingDto.Duration,bookingDto.UserName);
-
         public static BookingDto MapToBookingDto(Booking booking)
         {
             BookingDto bookingDto = new BookingDto();
@@ -15,7 +12,7 @@ namespace NetChallenge.Mappers
             bookingDto.OfficeName = booking.Office.Name;
             bookingDto.Duration = booking.Duration;
             bookingDto.DateTime = booking.DateTime;
-            bookingDto.UserName = booking.User;
+            bookingDto.UserName = booking.UserName;
 
             return bookingDto;
         }

@@ -8,7 +8,7 @@ namespace NetChallenge.Mappers
     {
         public static Office MapToOffice(OfficeDto officeDto)
         {
-            return new Office(new Location(), officeDto.Name, officeDto.MaxCapacity, officeDto.AvailableResources);
+            return new Office();
         }
 
         public static OfficeDto MapToOfficeDto(Office office)
