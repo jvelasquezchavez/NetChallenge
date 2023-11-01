@@ -9,6 +9,7 @@ namespace NetChallenge.Domain.Profiles
         public LocationProfile()
         {
             CreateMap<Location, LocationDto>();
+            CreateMap<LocationDto, Location> ();
             CreateMap<AddLocationRequest, Location>();
         }
     }

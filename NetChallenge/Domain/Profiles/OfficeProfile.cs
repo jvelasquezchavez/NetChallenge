@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using NetChallenge.Dto.Input;
 using NetChallenge.Dto.Output;
 
 namespace NetChallenge.Domain.Profiles
@@ -9,6 +10,7 @@ namespace NetChallenge.Domain.Profiles
         {
             CreateMap<Office, OfficeDto>()
                 .ForMember(dest => dest.LocationName, opt => opt.MapFrom(res => res.Location.Name));
+            CreateMap<AddOfficeRequest, Office>();
         }
     }
 }

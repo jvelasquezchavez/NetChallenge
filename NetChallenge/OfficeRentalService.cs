@@ -24,7 +24,6 @@ namespace NetChallenge
             _officeRepository = officeRepository;
             _bookingRepository = bookingRepository;
             _mapper = mapper;
-            //106 a 115 para traer automapper --> Llamar profiles a la carpeta de automappers.
         }
 
         public void AddLocation(AddLocationRequest request)
@@ -71,25 +70,21 @@ namespace NetChallenge
                 if (string.IsNullOrEmpty(request.LocationName))
                     throw new LocationNameNullOrEmptyException();
 
-                Location location = _mapper.Map<Location>(GetLocations(request.LocationName).FirstOrDefault());
-
-                if (location == null)
-                    throw new LocationNotFoundException(request.LocationName);
-
                 if (request.MaxCapacity <= 0)
                     throw new InvalidCapacityException();
 
                 if (GetOffice(request.LocationName, request.Name) != null)
                     throw new OfficeNameDuplicateException();
 
-                // Crear la nueva oficina
-                Office newOffice = new Office();
-                newOffice.Location = location;
-                newOffice.Name = request.Name;
-                newOffice.MaxCapacity = request.MaxCapacity;
-                newOffice.AvailableResources = request.AvailableResources ?? new List<string>();
+                Location location = _mapper.Map<Location>(GetLocations(request.LocationName).FirstOrDefault());
 
-                // Agregar la oficina al repositorio
+                if (location == null)
+                    throw new LocationNotFoundException(request.LocationName);
+
+                Office newOffice = new Office();
+                newOffice = _mapper.Map<Office>(request);
+                newOffice.Location = location;
+
                 _officeRepository.Add(newOffice);
             }
             catch (OfficeNameNullOrEmptyException ex)
